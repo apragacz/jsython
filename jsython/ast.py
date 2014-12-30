@@ -316,6 +316,22 @@ class Expr(AST):
         yield ')'
 
 
+class Attribute(AST):
+    getattr_symbol = 'getattr'
+
+    def __init__(self, value, attr):
+        self.value = value
+        self.attr = attr
+
+    def transpile(self, info):
+        yield self.getattr_symbol
+        yield '('
+        yield from self.value.transpile(info)
+        yield ', \''
+        yield from self.attr
+        yield '\')'
+
+
 class Pass(AST):
     pass
 

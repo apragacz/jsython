@@ -2,7 +2,7 @@ import ast
 
 from .ast import (Module, FunctionDefinition, FunctionCall, Block, Name, Num,
                   Assign, AugAssign, For, If, Compare, Return, Pass, Expr,
-                  List, BinOp)
+                  List, BinOp, Attribute)
 from .operators import Add, Mul, LtE
 
 
@@ -138,7 +138,7 @@ def transform_if(node, info):
     )
 
 
-def tranform_compare(node, info):
+def transform_compare(node, info):
     return Compare(
         left=transform(node.left, info),
         comparisons=list(zip(
@@ -157,6 +157,13 @@ def transform_bin_op(node, info):
         left=transform(node.left, info),
         op=transform(node.op, info),
         right=transform(node.right, info),
+    )
+
+
+def transform_attribute(node, info):
+    return Attribute(
+        value=transform(node.value, info),
+        attr=node.attr
     )
 
 
@@ -191,11 +198,12 @@ transform_map = {
     ast.Add: transform_add,
     ast.Mult: transform_mul,
     ast.LtE: transform_lte,
-    ast.Compare: tranform_compare,
+    ast.Compare: transform_compare,
     ast.Pass: transform_pass,
     ast.Expr: transform_expr,
     ast.List: transform_list,
     ast.Call: transform_call,
+    ast.Attribute: transform_attribute,
 }
 
 
