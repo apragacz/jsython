@@ -4,14 +4,17 @@ from .info import ArgumentInfo, VariableInfo
 
 class AST(object):
 
+    jsython_builtin_imports = ()
+
+    def get_jsython_builtin_import_dict(self):
+        return {import_str: self.convert_import_to_symbol(import_str)
+                for import_str in self.jsython_builtin_imports}
+
+    def convert_import_to_symbol(self, import_str):
+        return '$${}'.format(import_str)
+
     def has_after_semicolon(self):
         return True
-
-    def get_builtin_methods(self):
-        return ()
-
-    def get_jsython_builtin_methods(self):
-        return ()
 
     def get_indent_str(self, transpile_info):
         return ' ' * transpile_info.indent
@@ -46,6 +49,11 @@ class Module(ScopeAST):
         yield from self.body.transpile(info)
         yield ').call(this);\n'
 
+    def get_jsython_builtin_import_dict(self):
+        imports_dict = super(Module, self).get_jsython_builtin_import_dict()
+        imports_dict.update(self.body.get_jsython_builtin_import_dict())
+        return imports_dict
+
 
 class Block(AST):
 
@@ -58,7 +66,11 @@ class Block(AST):
             yield '{'
         info.inc_indent()
 
-        variables = self.parent_node.variables if self.parent_node else []
+        variables = self.parent_node.variables[:] if self.parent_node else []
+
+        if isinstance(self.parent_node, Module):
+            imports_dict = self.get_jsython_builtin_import_dict()
+            variables += [VariableInfo(k, None) for k in imports_dict.values()]
 
         if variables:
             yield '\n'
@@ -80,6 +92,12 @@ class Block(AST):
         info.dec_indent()
         yield self.get_indent_str(info)
         yield '}'
+
+    def get_jsython_builtin_import_dict(self):
+        imports_dict = super(Block, self).get_jsython_builtin_import_dict()
+        for stmt in self.statements:
+            imports_dict.update(stmt.get_jsython_builtin_import_dict())
+        return imports_dict
 
 
 class FunctionDefinition(ScopeAST):
@@ -107,6 +125,12 @@ class FunctionDefinition(ScopeAST):
         yield from self.body.transpile(info)
         # TODO: arginfo
 
+    def get_jsython_builtin_import_dict(self):
+        imports_dict = super(FunctionDefinition,
+                             self).get_jsython_builtin_import_dict()
+        imports_dict.update(self.body.get_jsython_builtin_import_dict())
+        return imports_dict
+
 
 class FunctionCall(AST):
 
@@ -131,19 +155,31 @@ class FunctionCall(AST):
         yield from transpile_join(', ', self.argument_values, info)
         yield ')'
 
+    def get_jsython_builtin_import_dict(self):
+        imports_dict = super(FunctionCall,
+                             self).get_jsython_builtin_import_dict()
+        imports_dict.update(self.function.get_jsython_builtin_import_dict())
+        return imports_dict
+
 
 class List(AST):
-    symbol = '__jsython__list__'
+    list_cons_import = 'list_cons'
+    jsython_builtin_import = (list_cons_import,)
 
     def __init__(self, elements):
         self.elements = elements
 
     def transpile(self, info):
-        # TODO: add list import
-        yield self.symbol
+        yield self.convert_import_to_symbol(self.list_cons_import)
         yield '('
         yield from transpile_join(', ', self.elements, info)
         yield ')'
+
+    def get_jsython_builtin_import_dict(self):
+        imports_dict = super(List, self).get_jsython_builtin_import_dict()
+        for elem in self.elements:
+            imports_dict.update(elem.get_jsython_builtin_import_dict())
+        return imports_dict
 
 
 class Num(AST):
@@ -178,6 +214,13 @@ class Assign(AST):
         yield ' = '
         yield from self.value.transpile(info)
 
+    def get_jsython_builtin_import_dict(self):
+        imports_dict = super(Assign, self).get_jsython_builtin_import_dict()
+        for target in self.targets:
+            imports_dict.update(target.get_jsython_builtin_import_dict())
+        imports_dict.update(self.value.get_jsython_builtin_import_dict())
+        return imports_dict
+
 
 class AugAssign(AST):
 
@@ -191,14 +234,23 @@ class AugAssign(AST):
 
 
 class For(AST):
-    next_symbol = '__jsython__next__'
-    iter_symbol = 'iter'
+    next_import = 'next_or_undef'
+    iter_import = 'iter'
+    jsython_builtin_imports = (next_import, iter_import)
 
     def __init__(self, target, iter, body, orelse):
         self.target = target
         self.iter = iter
         self.body = body
         self.orelse = orelse
+
+    @property
+    def next_symbol(self):
+        return self.convert_import_to_symbol(self.next_import)
+
+    @property
+    def iter_symbol(self):
+        return self.convert_import_to_symbol(self.iter_import)
 
     @property
     def iterator_symbol(self):
@@ -253,6 +305,12 @@ class For(AST):
 
 class If(AST):
 
+    bool_import = 'bool'
+
+    @property
+    def bool_symbol(self):
+        return self.convert_import_to_symbol(self.bool_import)
+
     def __init__(self, test, body, orelse):
         self.test = test
         self.body = body
@@ -263,8 +321,10 @@ class If(AST):
 
     def transpile(self, info):
         yield 'if ('
+        yield self.bool_symbol
+        yield '('
         yield from self.test.transpile(info)
-        yield ') '
+        yield ')) '
         yield from self.body.transpile(info)
         if self.orelse:
             yield ' else '
@@ -317,7 +377,11 @@ class Expr(AST):
 
 
 class Attribute(AST):
-    getattr_symbol = 'getattr'
+    getattr_import = 'getattr'
+
+    @property
+    def getattr_symbol(self):
+        return self.convert_import_to_symbol(self.getattr_import)
 
     def __init__(self, value, attr):
         self.value = value
