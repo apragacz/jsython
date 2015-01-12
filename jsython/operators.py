@@ -8,12 +8,26 @@ class Operator(object):
 class DirectOperator(Operator):
 
     @property
+    def bin_op_import(self):
+        return '{}'.format(self.operator_method)
+
+    @property
+    def aug_assign_import(self):
+        return 'i{}'.format(self.operator_method)
+
+    @property
     def bin_op_symbol(self):
-        return '__jsython__{}__'.format(self.operator_method)
+        return '$${}'.format(self.bin_op_import)
 
     @property
     def aug_assign_symbol(self):
-        return '__jsython__i{}__'.format(self.operator_method)
+        return '$${}'.format(self.aug_assign_import)
+
+    def get_bin_op_builtin_imports_dict(self):
+        return {self.bin_op_import: self.bin_op_symbol}
+
+    def get_aug_assign_builtin_imports_dict(self):
+        return {self.aug_assign_import: self.aug_assign_symbol}
 
     def transpile_bin_op(self, left, right, info):
         yield self.bin_op_symbol
