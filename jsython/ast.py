@@ -503,3 +503,18 @@ class Pass(AST):
 
     def transpile(self, info):
         yield ''
+
+
+class NameConstant(AST):
+    def __init__(self, value):
+        self.value = value
+
+    def transpile(self, info):
+        if self.value is None:
+            yield 'null'
+        elif self.value is True:
+            yield 'true'
+        elif self.value is False:
+            yield 'false'
+        else:
+            yield self.value

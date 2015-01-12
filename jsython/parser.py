@@ -2,7 +2,7 @@ import ast
 
 from .ast import (Module, FunctionDefinition, FunctionCall, Block, Name, Num,
                   Assign, AugAssign, For, If, Compare, Return, Pass, Expr,
-                  List, BinOp, Attribute)
+                  List, BinOp, Attribute, NameConstant)
 from .operators import Add, Sub, Mul, Div, LtE
 
 
@@ -172,6 +172,9 @@ def transform_expr(node, info):
         value=transform(node.value, info)
     )
 
+def transform_nameconstant(node, info):
+    return NameConstant(value=node.value)
+
 
 def get_operator_transform(operator_cls):
     def fun(node, info):
@@ -208,6 +211,7 @@ transform_map = {
     ast.List: transform_list,
     ast.Call: transform_call,
     ast.Attribute: transform_attribute,
+    ast.NameConstant: transform_nameconstant,
 }
 
 
