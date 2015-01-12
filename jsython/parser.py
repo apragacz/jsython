@@ -3,7 +3,7 @@ import ast
 from .ast import (Module, FunctionDefinition, FunctionCall, Block, Name, Num,
                   Assign, AugAssign, For, If, Compare, Return, Pass, Expr,
                   List, BinOp, Attribute)
-from .operators import Add, Mul, LtE
+from .operators import Add, Sub, Mul, Div, LtE
 
 
 class TransformInfo(object):
@@ -180,7 +180,9 @@ def get_operator_transform(operator_cls):
 
 
 transform_add = get_operator_transform(Add)
+transform_sub = get_operator_transform(Sub)
 transform_mul = get_operator_transform(Mul)
+transform_div = get_operator_transform(Div)
 transform_lte = get_operator_transform(LtE)
 transform_pass = get_operator_transform(Pass)
 
@@ -196,7 +198,9 @@ transform_map = {
     ast.Return: transform_return,
     ast.BinOp: transform_bin_op,
     ast.Add: transform_add,
+    ast.Sub: transform_sub,
     ast.Mult: transform_mul,
+    ast.Div: transform_div,
     ast.LtE: transform_lte,
     ast.Compare: transform_compare,
     ast.Pass: transform_pass,

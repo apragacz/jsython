@@ -47,9 +47,19 @@ class Add(DirectOperator):
     operator_method = 'add'
 
 
+class Sub(DirectOperator):
+    operator_sign = '-'
+    operator_method = 'sub'
+
+
 class Mul(DirectOperator):
     operator_sign = '*'
     operator_method = 'mul'
+
+
+class Div(DirectOperator):
+    operator_sign = '/'
+    operator_method = 'div'
 
 
 class LtE(DirectOperator):
