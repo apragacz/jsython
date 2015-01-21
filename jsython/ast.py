@@ -91,6 +91,8 @@ class Block(AST):
             imports_dict = self.get_jsython_builtin_import_dict()
             variables += [VariableInfo(k, None) for k in imports_dict.values()]
 
+        variables = sorted(variables, key=lambda v: v.name)
+
         if variables:
             yield '\n'
             yield self.get_indent_str(info)
@@ -99,7 +101,7 @@ class Block(AST):
             yield ';\n'
 
         if module_block:
-            for k, v in imports_dict.items():
+            for k, v in sorted(imports_dict.items(), key=lambda item: item[1]):
                 yield '\n'
                 yield self.get_indent_str(info)
                 yield v
@@ -113,6 +115,8 @@ class Block(AST):
             stmt_str = ''.join(stmt.transpile(info))
             if not stmt_str:
                 continue
+            if isinstance(stmt, FunctionDefinition):
+                yield '\n'
             yield '\n'
             yield self.get_indent_str(info)
             yield stmt_str
@@ -212,16 +216,16 @@ class FunctionCall(AST):
 
 class List(AST):
     list_cons_import = 'list_cons'
-    jsython_builtin_import = (list_cons_import,)
+    jsython_builtin_imports = (list_cons_import,)
 
     def __init__(self, elements):
         self.elements = elements
 
     def transpile(self, info):
         yield self.convert_import_to_symbol(self.list_cons_import)
-        yield '('
+        yield '(['
         yield from transpile_join(', ', self.elements, info)
-        yield ')'
+        yield '])'
 
     def get_jsython_builtin_import_dict(self):
         imports_dict = super(List, self).get_jsython_builtin_import_dict()
@@ -231,12 +235,20 @@ class List(AST):
 
 
 class Num(AST):
+    int_cons_import = 'int_cons'
+    jsython_builtin_imports = (int_cons_import,)
 
     def __init__(self, n):
+        if not isinstance(n, int):
+            ValueError('type {} is unsupported in Num'.format(type(n)))
         self.n = n
 
     def transpile(self, info):
-        yield '{}'.format(self.n)
+        if isinstance(self.n, int):
+            yield self.convert_import_to_symbol(self.int_cons_import)
+            yield '('
+            yield '{}'.format(self.n)
+            yield ')'
 
 
 class Name(AST):
@@ -365,7 +377,7 @@ class For(AST):
 
 class If(AST):
 
-    bool_import = 'test'
+    bool_import = 'bool'
 
     jsython_builtin_imports = (bool_import,)
 
@@ -386,7 +398,7 @@ class If(AST):
         yield self.bool_symbol
         yield '('
         yield from self.test.transpile(info)
-        yield ')) '
+        yield ').__boolean__) '
         yield from self.body.transpile(info)
         if self.orelse:
             yield ' else '
@@ -509,12 +521,22 @@ class NameConstant(AST):
     def __init__(self, value):
         self.value = value
 
-    def transpile(self, info):
-        if self.value is None:
-            yield 'null'
-        elif self.value is True:
-            yield 'true'
-        elif self.value is False:
-            yield 'false'
+    def transform(self, value):
+        if value is None:
+            return 'None'
+        elif value is True:
+            return 'True'
+        elif value is False:
+            return 'False'
         else:
-            yield self.value
+            return repr(value)
+
+    def transpile(self, info):
+        yield self.transform(self.value)
+
+    def get_jsython_builtin_import_dict(self):
+        imports_dict = super(NameConstant,
+                             self).get_jsython_builtin_import_dict()
+        value_repr = self.transform(self.value)
+        imports_dict.update({value_repr: value_repr})
+        return imports_dict
