@@ -5,6 +5,30 @@ class Operator(object):
     pass
 
 
+class UnaryOp(object):
+
+    @property
+    def unary_op_import(self):
+        return '{}'.format(self.operator_method)
+
+    @property
+    def unary_op_symbol(self):
+        return '$${}'.format(self.unary_op_import)
+
+    def get_unary_op_builtin_imports_dict(self):
+        return {self.unary_op_import: self.unary_op_symbol}
+
+    def transpile_unary_op(self, operand, info):
+        yield self.unary_op_symbol
+        yield '('
+        yield from operand.transpile(info)
+        yield ')'
+
+
+class Not(UnaryOp):
+    operator_method = 'not'
+
+
 class DirectOperator(Operator):
 
     @property

@@ -2,8 +2,8 @@ import ast
 
 from .ast import (Module, FunctionDefinition, FunctionCall, Block, Name, Num,
                   Assign, AugAssign, For, If, Compare, Return, Pass, Expr,
-                  List, BinOp, Attribute, NameConstant)
-from .operators import Add, Sub, Mul, Div, LtE
+                  List, BinOp, UnaryOp, Attribute, NameConstant)
+from .operators import Add, Sub, Mul, Div, LtE, Not
 
 
 class TransformInfo(object):
@@ -160,6 +160,13 @@ def transform_bin_op(node, info):
     )
 
 
+def transform_unary_op(node, info):
+    return UnaryOp(
+        op=transform(node.op, info),
+        operand=transform(node.operand, info),
+    )
+
+
 def transform_attribute(node, info):
     return Attribute(
         value=transform(node.value, info),
@@ -171,6 +178,7 @@ def transform_expr(node, info):
     return Expr(
         value=transform(node.value, info)
     )
+
 
 def transform_nameconstant(node, info):
     return NameConstant(value=node.value)
@@ -188,6 +196,7 @@ transform_mul = get_operator_transform(Mul)
 transform_div = get_operator_transform(Div)
 transform_lte = get_operator_transform(LtE)
 transform_pass = get_operator_transform(Pass)
+transform_not = get_operator_transform(Not)
 
 transform_map = {
     ast.Module: transform_module,
@@ -200,11 +209,13 @@ transform_map = {
     ast.If: transform_if,
     ast.Return: transform_return,
     ast.BinOp: transform_bin_op,
+    ast.UnaryOp: transform_unary_op,
     ast.Add: transform_add,
     ast.Sub: transform_sub,
     ast.Mult: transform_mul,
     ast.Div: transform_div,
     ast.LtE: transform_lte,
+    ast.Not: transform_not,
     ast.Compare: transform_compare,
     ast.Pass: transform_pass,
     ast.Expr: transform_expr,

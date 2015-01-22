@@ -471,6 +471,22 @@ class BinOp(AST):
         return imports_dict
 
 
+class UnaryOp(AST):
+
+    def __init__(self, op, operand):
+        self.op = op
+        self.operand = operand
+
+    def transpile(self, info):
+        yield from self.op.transpile_unary_op(self.operand, info)
+
+    def get_jsython_builtin_import_dict(self):
+        imports_dict = super(UnaryOp, self).get_jsython_builtin_import_dict()
+        imports_dict.update(self.operand.get_jsython_builtin_import_dict())
+        imports_dict.update(self.op.get_unary_op_builtin_imports_dict())
+        return imports_dict
+
+
 class Expr(AST):
 
     def __init__(self, value):
