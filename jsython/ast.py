@@ -505,11 +505,16 @@ class Expr(AST):
 
 class Attribute(AST):
     getattr_import = 'getattr'
-    jsython_builtin_imports = (getattr_import,)
+    str_cons_import = 'str_cons'
+    jsython_builtin_imports = (getattr_import, str_cons_import)
 
     @property
     def getattr_symbol(self):
         return self.convert_import_to_symbol(self.getattr_import)
+
+    @property
+    def str_cons_symbol(self):
+        return self.convert_import_to_symbol(self.str_cons_import)
 
     def __init__(self, value, attr):
         self.value = value
@@ -519,9 +524,11 @@ class Attribute(AST):
         yield self.getattr_symbol
         yield '('
         yield from self.value.transpile(info)
-        yield ', \''
+        yield ', '
+        yield self.str_cons_symbol
+        yield '(\''
         yield from self.attr
-        yield '\')'
+        yield '\'))'
 
     def get_jsython_builtin_import_dict(self):
         imports_dict = super(Attribute, self).get_jsython_builtin_import_dict()
