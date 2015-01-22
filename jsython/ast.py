@@ -6,6 +6,9 @@ class AST(object):
 
     jsython_builtin_imports = ()
 
+    def is_empty(self):
+        return False
+
     def get_jsython_builtin_import_dict(self):
         return {import_str: self.convert_import_to_symbol(import_str)
                 for import_str in self.jsython_builtin_imports}
@@ -73,6 +76,9 @@ class Block(AST):
     def __init__(self, statements, parent_node):
         self.statements = statements
         self.parent_node = parent_node
+
+    def is_empty(self):
+        return not bool(self.statements)
 
     def transpile(self, info, omit_first_brace=False):
         module_block = isinstance(self.parent_node, Module)
@@ -400,7 +406,7 @@ class If(AST):
         yield from self.test.transpile(info)
         yield ').__boolean__) '
         yield from self.body.transpile(info)
-        if self.orelse:
+        if self.orelse and not self.orelse.is_empty():
             yield ' else '
             yield from self.orelse.transpile(info)
 
