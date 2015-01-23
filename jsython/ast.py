@@ -259,11 +259,29 @@ class Num(AST):
 
 class Name(AST):
 
+    builtin_functions = (
+        'object', 'type', 'str', 'int', 'bool',  'list',
+        'NotImplemented',
+        'BaseException', 'Exception',
+        'ValueError', 'TypeError', 'AttributeError', 'StopIteration',
+        'print',
+        'len',
+        'dir',
+        'iter', 'next',
+        'getattr', 'setattr', 'hasattr', 'delattr',
+    )
+
     def __init__(self, id):
         self.id = id
 
     def transpile(self, info):
         yield self.id
+
+    def get_jsython_builtin_import_dict(self):
+        imports_dict = super(Name, self).get_jsython_builtin_import_dict()
+        if self.id in self.builtin_functions:
+            imports_dict[self.id] = self.id
+        return imports_dict
 
 
 class Assign(AST):
