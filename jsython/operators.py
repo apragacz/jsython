@@ -85,7 +85,7 @@ class Mul(BinOp):
 
 class Div(BinOp):
     operator_sign = '/'
-    operator_method = 'div'
+    operator_method = 'truediv'
 
 
 class LtE(BinOp):
