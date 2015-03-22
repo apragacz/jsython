@@ -29,35 +29,38 @@ class Not(UnaryOp):
     operator_method = 'not'
 
 
-class BinOp(Operator):
+class AbstractBinOp(Operator):
 
     @property
     def bin_op_import(self):
         return '{}'.format(self.operator_method)
 
     @property
-    def aug_assign_import(self):
-        return 'i{}'.format(self.operator_method)
-
-    @property
     def bin_op_symbol(self):
         return '$${}'.format(self.bin_op_import)
 
-    @property
-    def aug_assign_symbol(self):
-        return '$${}'.format(self.aug_assign_import)
-
     def get_bin_op_builtin_imports_dict(self):
         return {self.bin_op_import: self.bin_op_symbol}
-
-    def get_aug_assign_builtin_imports_dict(self):
-        return {self.aug_assign_import: self.aug_assign_symbol}
 
     def transpile_bin_op(self, left, right, info):
         yield self.bin_op_symbol
         yield '('
         yield from transpile_join(', ', [left, right], info)
         yield ')'
+
+
+class BinOp(AbstractBinOp):
+
+    @property
+    def aug_assign_import(self):
+        return 'i{}'.format(self.operator_method)
+
+    @property
+    def aug_assign_symbol(self):
+        return '$${}'.format(self.aug_assign_import)
+
+    def get_aug_assign_builtin_imports_dict(self):
+        return {self.aug_assign_import: self.aug_assign_symbol}
 
     def transpile_aug_assign(self, target, value, info):
         yield from target.transpile(info)
@@ -66,6 +69,10 @@ class BinOp(Operator):
         yield '('
         yield from transpile_join(', ', [target, value], info)
         yield ')'
+
+
+class BooleanOp(AbstractBinOp):
+    pass
 
 
 class Add(BinOp):
@@ -88,6 +95,51 @@ class Div(BinOp):
     operator_method = 'truediv'
 
 
-class LtE(BinOp):
+class Eq(BooleanOp):
+    operator_sign = '=='
+    operator_method = 'eq'
+
+
+class NotEq(BooleanOp):
+    operator_sign = '!='
+    operator_method = 'neq'
+
+
+class Is(BooleanOp):
+    operator_sign = 'is'
+    operator_method = 'is'
+
+
+class IsNot(BooleanOp):
+    operator_sign = 'is not'
+    operator_method = 'is_not'
+
+
+class Lt(BooleanOp):
+    operator_sign = '<'
+    operator_method = 'lt'
+
+
+class LtE(BooleanOp):
     operator_sign = '<='
     operator_method = 'lte'
+
+
+class Gt(BooleanOp):
+    operator_sign = '>'
+    operator_method = 'gt'
+
+
+class GtE(BooleanOp):
+    operator_sign = '>='
+    operator_method = 'gte'
+
+
+class In(BooleanOp):
+    operator_sign = 'in'
+    operator_method = 'contains'
+
+
+class NotIn(BooleanOp):
+    operator_sign = 'not in'
+    operator_method = 'not_contains'

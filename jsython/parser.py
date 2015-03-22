@@ -3,7 +3,8 @@ import ast
 from .ast import (Module, FunctionDefinition, FunctionCall, Block, Name, Num,
                   Assign, AugAssign, For, If, Compare, Return, Pass, Expr,
                   List, BinOp, UnaryOp, Attribute, NameConstant)
-from .operators import Add, Sub, Mul, Div, LtE, Not
+from .operators import (Add, Sub, Mul, Div,
+                        Not, Eq, NotEq, Is, IsNot, Lt, LtE, Gt, GtE, In, NotIn)
 
 
 class TransformInfo(object):
@@ -194,9 +195,20 @@ transform_add = get_operator_transform(Add)
 transform_sub = get_operator_transform(Sub)
 transform_mul = get_operator_transform(Mul)
 transform_div = get_operator_transform(Div)
-transform_lte = get_operator_transform(LtE)
 transform_pass = get_operator_transform(Pass)
+
 transform_not = get_operator_transform(Not)
+transform_eq = get_operator_transform(Eq)
+transform_neq = get_operator_transform(NotEq)
+transform_is = get_operator_transform(Is)
+transform_is_not = get_operator_transform(IsNot)
+transform_lt = get_operator_transform(Lt)
+transform_lte = get_operator_transform(LtE)
+transform_gt = get_operator_transform(Gt)
+transform_gte = get_operator_transform(GtE)
+transform_in = get_operator_transform(In)
+transform_not_in = get_operator_transform(NotIn)
+
 
 transform_map = {
     ast.Module: transform_module,
@@ -214,8 +226,17 @@ transform_map = {
     ast.Sub: transform_sub,
     ast.Mult: transform_mul,
     ast.Div: transform_div,
-    ast.LtE: transform_lte,
     ast.Not: transform_not,
+    ast.Eq: transform_eq,
+    ast.NotEq: transform_neq,
+    ast.Is: transform_is,
+    ast.IsNot: transform_is_not,
+    ast.Lt: transform_lt,
+    ast.LtE: transform_lte,
+    ast.Gt: transform_gt,
+    ast.GtE: transform_gte,
+    ast.In: transform_in,
+    ast.NotIn: transform_not_in,
     ast.Compare: transform_compare,
     ast.Pass: transform_pass,
     ast.Expr: transform_expr,
