@@ -95,6 +95,11 @@ class Div(BinOp):
     operator_method = 'truediv'
 
 
+class FloorDiv(BinOp):
+    operator_sign = '//'
+    operator_method = 'floordiv'
+
+
 class Eq(BooleanOp):
     operator_sign = '=='
     operator_method = 'eq'

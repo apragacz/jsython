@@ -3,7 +3,7 @@ import ast
 from .ast import (Module, FunctionDefinition, FunctionCall, Block, Name, Num,
                   Assign, AugAssign, For, If, Compare, Return, Pass, Expr,
                   List, BinOp, UnaryOp, Attribute, NameConstant)
-from .operators import (Add, Sub, Mul, Div,
+from .operators import (Add, Sub, Mul, Div, FloorDiv,
                         Not, Eq, NotEq, Is, IsNot, Lt, LtE, Gt, GtE, In, NotIn)
 
 
@@ -195,6 +195,7 @@ transform_add = get_operator_transform(Add)
 transform_sub = get_operator_transform(Sub)
 transform_mul = get_operator_transform(Mul)
 transform_div = get_operator_transform(Div)
+transform_floordiv = get_operator_transform(FloorDiv)
 transform_pass = get_operator_transform(Pass)
 
 transform_not = get_operator_transform(Not)
@@ -226,6 +227,7 @@ transform_map = {
     ast.Sub: transform_sub,
     ast.Mult: transform_mul,
     ast.Div: transform_div,
+    ast.FloorDiv: transform_floordiv,
     ast.Not: transform_not,
     ast.Eq: transform_eq,
     ast.NotEq: transform_neq,
