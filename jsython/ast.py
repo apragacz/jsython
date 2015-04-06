@@ -40,6 +40,10 @@ class ScopeAST(AST):
             self.variables.append(VariableInfo(name, annotation))
 
 
+class AssignableAST(AST):
+    pass
+
+
 class Module(ScopeAST):
 
     def __init__(self, body):
@@ -358,7 +362,7 @@ class For(AST):
         yield ' = '
         yield self.iter_symbol
         yield '('
-        yield self.iter.id
+        yield from self.iter.transpile(info)
         yield '), '
         yield target_symbol
         yield ' = '
@@ -521,14 +525,19 @@ class Expr(AST):
         return imports_dict
 
 
-class Attribute(AST):
+class Attribute(AssignableAST):
     getattr_import = 'getattr'
+    setattr_import = 'setattr'
     str_cons_import = 'str_cons'
-    jsython_builtin_imports = (getattr_import, str_cons_import)
+    jsython_builtin_imports = (getattr_import, setattr_import, str_cons_import)
 
     @property
     def getattr_symbol(self):
         return self.convert_import_to_symbol(self.getattr_import)
+
+    @property
+    def setattr_symbol(self):
+        return self.convert_import_to_symbol(self.setattr_import)
 
     @property
     def str_cons_symbol(self):
@@ -555,7 +564,6 @@ class Attribute(AST):
 
 
 class Pass(AST):
-    pass
 
     def has_after_semicolon(self):
         return False
@@ -586,4 +594,49 @@ class NameConstant(AST):
                              self).get_jsython_builtin_import_dict()
         value_repr = self.transform(self.value)
         imports_dict.update({value_repr: value_repr})
+        return imports_dict
+
+
+class Subscript(AssignableAST):
+
+    getitem_import = 'getitem'
+    setitem_import = 'setitem'
+    jsython_builtin_imports = (getitem_import, setitem_import)
+
+    @property
+    def getitem_symbol(self):
+        return self.convert_import_to_symbol(self.getitem_import)
+
+    def __init__(self, value, key):
+        self.value = value
+        self.key = key
+
+    def transpile(self, info):
+        yield self.getitem_symbol
+        yield '('
+        yield from self.value.transpile(info)
+        yield ', '
+        yield from self.key.transpile(info)
+        yield ')'
+
+    def get_jsython_builtin_import_dict(self):
+        imports_dict = super(Subscript,
+                             self).get_jsython_builtin_import_dict()
+        imports_dict.update(self.value.get_jsython_builtin_import_dict())
+        imports_dict.update(self.key.get_jsython_builtin_import_dict())
+        return imports_dict
+
+
+class Index(AST):
+
+    def __init__(self, value):
+        self.value = value
+
+    def transpile(self, info):
+        yield from self.value.transpile(info)
+
+    def get_jsython_builtin_import_dict(self):
+        imports_dict = super(Index,
+                             self).get_jsython_builtin_import_dict()
+        imports_dict.update(self.value.get_jsython_builtin_import_dict())
         return imports_dict

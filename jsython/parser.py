@@ -2,7 +2,8 @@ import ast
 
 from .ast import (Module, FunctionDefinition, FunctionCall, Block, Name, Num,
                   Assign, AugAssign, For, If, Compare, Return, Pass, Expr,
-                  List, BinOp, UnaryOp, Attribute, NameConstant)
+                  List, BinOp, UnaryOp, Attribute, NameConstant, Subscript,
+                  Index)
 from .operators import (Add, Sub, Mul, Div, FloorDiv,
                         Not, Eq, NotEq, Is, IsNot, Lt, LtE, Gt, GtE, In, NotIn)
 
@@ -99,7 +100,8 @@ def transform_assign(node, info):
     targets = [transform(t, info) for t in node.targets]
     scope_node = info.get_scope_node()
     for t in targets:
-        scope_node.add_variable_info(t.id)
+        if isinstance(t, Name):
+            scope_node.add_variable_info(t.id)
     return Assign(
         targets=targets,
         value=transform(node.value, info),
@@ -185,6 +187,19 @@ def transform_nameconstant(node, info):
     return NameConstant(value=node.value)
 
 
+def transform_subscript(node, info):
+    return Subscript(
+        value=transform(node.value, info),
+        key=transform(node.slice, info),
+    )
+
+
+def transform_index(node, info):
+    return Index(
+        value=transform(node.value, info),
+    )
+
+
 def get_operator_transform(operator_cls):
     def fun(node, info):
         return operator_cls()
@@ -246,6 +261,8 @@ transform_map = {
     ast.Call: transform_call,
     ast.Attribute: transform_attribute,
     ast.NameConstant: transform_nameconstant,
+    ast.Subscript: transform_subscript,
+    ast.Index: transform_index,
 }
 
 
