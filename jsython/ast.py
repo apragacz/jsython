@@ -221,6 +221,8 @@ class FunctionCall(AST):
         imports_dict = super(FunctionCall,
                              self).get_jsython_builtin_import_dict()
         imports_dict.update(self.function.get_jsython_builtin_import_dict())
+        for arg_val in self.argument_values:
+            imports_dict.update(arg_val.get_jsython_builtin_import_dict())
         return imports_dict
 
 
