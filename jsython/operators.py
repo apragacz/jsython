@@ -2,7 +2,9 @@ from .utils import transpile_join
 
 
 class Operator(object):
-    pass
+
+    def has_bool_result(self):
+        return False
 
 
 class UnaryOp(Operator):
@@ -72,7 +74,9 @@ class BinOp(AbstractBinOp):
 
 
 class BooleanOp(AbstractBinOp):
-    pass
+
+    def has_bool_result(self):
+        return True
 
 
 class Add(BinOp):

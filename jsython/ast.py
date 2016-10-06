@@ -9,6 +9,9 @@ class AST(object):
     def is_empty(self):
         return False
 
+    def has_bool_result(self):
+        return False
+
     def get_jsython_builtin_import_dict(self):
         return {import_str: self.convert_import_to_symbol(import_str)
                 for import_str in self.jsython_builtin_imports}
@@ -425,10 +428,14 @@ class If(AST):
 
     def transpile(self, info):
         yield 'if ('
-        yield self.bool_symbol
-        yield '('
+        cast_to_bool = not self.test.has_bool_result()
+        if cast_to_bool:
+            yield self.bool_symbol
+            yield '('
         yield from self.test.transpile(info)
-        yield ').__boolean__) '
+        if cast_to_bool:
+            yield ')'
+        yield '.__boolean__) '
         yield from self.body.transpile(info)
         if self.orelse and not self.orelse.is_empty():
             yield ' else '
@@ -460,6 +467,9 @@ class Compare(AST):
             imports_dict.update(op.get_bin_op_builtin_imports_dict())
             imports_dict.update(right.get_jsython_builtin_import_dict())
         return imports_dict
+
+    def has_bool_result(self):
+        return all((op.has_bool_result() for op, _ in self.comparisons))
 
 
 class Return(AST):
@@ -494,6 +504,9 @@ class BinOp(AST):
         imports_dict.update(self.op.get_bin_op_builtin_imports_dict())
         return imports_dict
 
+    def has_bool_result(self):
+        return self.op.has_bool_result()
+
 
 class UnaryOp(AST):
 
@@ -510,6 +523,9 @@ class UnaryOp(AST):
         imports_dict.update(self.op.get_unary_op_builtin_imports_dict())
         return imports_dict
 
+    def has_bool_result(self):
+        return self.op.has_bool_result()
+
 
 class Expr(AST):
 
@@ -525,6 +541,9 @@ class Expr(AST):
         imports_dict = super(Expr, self).get_jsython_builtin_import_dict()
         imports_dict.update(self.value.get_jsython_builtin_import_dict())
         return imports_dict
+
+    def has_bool_result(self):
+        return self.value.has_bool_result()
 
 
 class Attribute(AssignableAST):
