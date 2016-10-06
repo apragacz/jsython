@@ -27,7 +27,7 @@ class BaseVariableInfo(object):
 class VariableInfo(BaseVariableInfo):
 
     def __init__(self, name, annotation):
-        super(VariableInfo, self).__init__(name, annotation)
+        super().__init__(name, annotation)
         self.value_nodes = []
 
     def add_value_node(self, value_node):
@@ -37,5 +37,5 @@ class VariableInfo(BaseVariableInfo):
 class ArgumentInfo(BaseVariableInfo):
 
     def __init__(self, name, annotation, default=None):
-        super(ArgumentInfo, self).__init__(name, annotation)
+        super().__init__(name, annotation)
         self.default = default

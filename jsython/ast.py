@@ -50,7 +50,7 @@ class AssignableAST(AST):
 class Module(ScopeAST):
 
     def __init__(self, body):
-        super(Module, self).__init__()
+        super().__init__()
         self.body = body
 
     def transpile(self, info):
@@ -73,7 +73,7 @@ class Module(ScopeAST):
         yield from self.body.transpile(info)
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(Module, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.body.get_jsython_builtin_import_dict())
         return imports_dict
 
@@ -159,7 +159,7 @@ class Block(AST):
         yield '}'
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(Block, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         for stmt in self.statements:
             imports_dict.update(stmt.get_jsython_builtin_import_dict())
         return imports_dict
@@ -168,7 +168,7 @@ class Block(AST):
 class FunctionDefinition(ScopeAST):
 
     def __init__(self, name, body):
-        super(FunctionDefinition, self).__init__()
+        super().__init__()
         self.name = name
         self.body = body
         self.arguments = []
@@ -191,8 +191,7 @@ class FunctionDefinition(ScopeAST):
         # TODO: arginfo
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(FunctionDefinition,
-                             self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.body.get_jsython_builtin_import_dict())
         return imports_dict
 
@@ -221,8 +220,7 @@ class FunctionCall(AST):
         yield ')'
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(FunctionCall,
-                             self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.function.get_jsython_builtin_import_dict())
         for arg_val in self.argument_values:
             imports_dict.update(arg_val.get_jsython_builtin_import_dict())
@@ -243,7 +241,7 @@ class List(AST):
         yield '])'
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(List, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         for elem in self.elements:
             imports_dict.update(elem.get_jsython_builtin_import_dict())
         return imports_dict
@@ -287,7 +285,7 @@ class Name(AST):
         yield self.id
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(Name, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         if self.id in self.builtin_functions:
             imports_dict[self.id] = self.id
         return imports_dict
@@ -308,7 +306,7 @@ class Assign(AST):
         yield from self.value.transpile(info)
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(Assign, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         for target in self.targets:
             imports_dict.update(target.get_jsython_builtin_import_dict())
         imports_dict.update(self.value.get_jsython_builtin_import_dict())
@@ -326,7 +324,7 @@ class AugAssign(AST):
         yield from self.op.transpile_aug_assign(self.target, self.value, info)
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(AugAssign, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.op.get_aug_assign_builtin_imports_dict())
         for node in [self.target, self.value]:
             imports_dict.update(node.get_jsython_builtin_import_dict())
@@ -403,7 +401,7 @@ class For(AST):
         yield from self.body.transpile(info)
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(For, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.body.get_jsython_builtin_import_dict())
         return imports_dict
 
@@ -442,7 +440,7 @@ class If(AST):
             yield from self.orelse.transpile(info)
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(If, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         for node in [self.test, self.body, self.orelse]:
             imports_dict.update(node.get_jsython_builtin_import_dict())
         return imports_dict
@@ -461,7 +459,7 @@ class Compare(AST):
         yield from yield_join(' && ', self.comparisons, yielder)
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(Compare, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.left.get_jsython_builtin_import_dict())
         for op, right in self.comparisons:
             imports_dict.update(op.get_bin_op_builtin_imports_dict())
@@ -482,7 +480,7 @@ class Return(AST):
         yield from self.value.transpile(info)
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(Return, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.value.get_jsython_builtin_import_dict())
         return imports_dict
 
@@ -498,7 +496,7 @@ class BinOp(AST):
         yield from self.op.transpile_bin_op(self.left, self.right, info)
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(BinOp, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         for node in [self.left, self.right]:
             imports_dict.update(node.get_jsython_builtin_import_dict())
         imports_dict.update(self.op.get_bin_op_builtin_imports_dict())
@@ -518,7 +516,7 @@ class UnaryOp(AST):
         yield from self.op.transpile_unary_op(self.operand, info)
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(UnaryOp, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.operand.get_jsython_builtin_import_dict())
         imports_dict.update(self.op.get_unary_op_builtin_imports_dict())
         return imports_dict
@@ -538,7 +536,7 @@ class Expr(AST):
         yield ')'
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(Expr, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.value.get_jsython_builtin_import_dict())
         return imports_dict
 
@@ -579,7 +577,7 @@ class Attribute(AssignableAST):
         yield '\'))'
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(Attribute, self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.value.get_jsython_builtin_import_dict())
         return imports_dict
 
@@ -611,8 +609,7 @@ class NameConstant(AST):
         yield self.transform(self.value)
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(NameConstant,
-                             self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         value_repr = self.transform(self.value)
         imports_dict.update({value_repr: value_repr})
         return imports_dict
@@ -641,8 +638,7 @@ class Subscript(AssignableAST):
         yield ')'
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(Subscript,
-                             self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.value.get_jsython_builtin_import_dict())
         imports_dict.update(self.key.get_jsython_builtin_import_dict())
         return imports_dict
@@ -657,7 +653,6 @@ class Index(AST):
         yield from self.value.transpile(info)
 
     def get_jsython_builtin_import_dict(self):
-        imports_dict = super(Index,
-                             self).get_jsython_builtin_import_dict()
+        imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.value.get_jsython_builtin_import_dict())
         return imports_dict
