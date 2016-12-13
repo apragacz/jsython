@@ -89,6 +89,7 @@ class Block(AST):
 
     def transpile(self, info, omit_first_brace=False):
         module_block = isinstance(self.parent_node, Module)
+        classdef_block = isinstance(self.parent_node, ClassDefinition)
         if not omit_first_brace:
             yield '{'
         info.inc_indent()
@@ -137,7 +138,7 @@ class Block(AST):
                 yield ';'
         yield '\n'
 
-        if module_block:
+        if module_block or classdef_block:
             yield '\n'
             yield self.get_indent_str(info)
             yield 'return {'
@@ -655,4 +656,28 @@ class Index(AST):
     def get_jsython_builtin_import_dict(self):
         imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.value.get_jsython_builtin_import_dict())
+        return imports_dict
+
+
+class ClassDefinition(ScopeAST):
+
+    def __init__(self, name, bases, body):
+        super().__init__()
+        self.name = name
+        self.bases = bases
+        self.body = body
+
+    def transpile(self, info):
+        yield self.name
+        yield ' = type(\''
+        yield self.name
+        yield '\', ['
+        yield from yield_join(', ', self.bases, lambda node: node.transpile(info))
+        yield '], function () '
+        yield from self.body.transpile(info)
+        yield ')'
+
+    def get_jsython_builtin_import_dict(self):
+        imports_dict = super().get_jsython_builtin_import_dict()
+        imports_dict.update(self.body.get_jsython_builtin_import_dict())
         return imports_dict

@@ -3,7 +3,7 @@ import ast
 from .ast import (Module, FunctionDefinition, FunctionCall, Block, Name, Num,
                   Assign, AugAssign, For, If, Compare, Return, Pass, Expr,
                   List, BinOp, UnaryOp, Attribute, NameConstant, Subscript,
-                  Index)
+                  Index, ClassDefinition)
 from .operators import (Add, Sub, Mul, Div, FloorDiv,
                         Not, Eq, NotEq, Is, IsNot, Lt, LtE, Gt, GtE, In, NotIn)
 
@@ -200,6 +200,29 @@ def transform_index(node, info):
     )
 
 
+def transform_classdef(node, info):
+    assert not node.decorator_list
+    assert not node.keywords
+    assert node.starargs is None
+    assert node.kwargs is None
+
+    new_node = ClassDefinition(
+        name=node.name,
+        bases=[transform(bn, info) for bn in node.bases],
+        body=None,
+    )
+    scope_node = info.get_scope_node()
+    scope_node.add_variable_info(node.name)
+
+    info.push_function_context(new_node)
+
+    new_node.body = transform_block(node.body, info, new_node)
+
+    info.pop_context()
+
+    return new_node
+
+
 def get_operator_transform(operator_cls):
     def fun(node, info):
         return operator_cls()
@@ -263,6 +286,7 @@ transform_map = {
     ast.NameConstant: transform_nameconstant,
     ast.Subscript: transform_subscript,
     ast.Index: transform_index,
+    ast.ClassDef: transform_classdef,
 }
 
 
