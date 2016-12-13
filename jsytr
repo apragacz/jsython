@@ -7,26 +7,7 @@ if __name__ == '__main__' and sys.version_info[0] < 3:
     sys.exit(-1)
 
 
-from jsython.parser import parse
-from jsython.info import TranspileInfo
-
-
-def transpile(in_f, out_f):
-    data = in_f.read()
-    graph = parse(data)
-    transpile_info = TranspileInfo()
-    for chunk in graph.transpile(transpile_info):
-        if not isinstance(chunk, str):
-            raise ValueError(''.join(c for c in chunk))
-        out_f.write(chunk)
-
-
-def main(argv):
-    for arg in argv[1:]:
-        arg_result = arg[:-3] + '.js'
-        with open(arg, 'rt') as in_f:
-            with open(arg_result, 'wt') as out_f:
-                transpile(in_f, out_f)
+from jsython.main import main
 
 
 if __name__ == '__main__':
