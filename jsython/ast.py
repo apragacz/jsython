@@ -661,15 +661,24 @@ class Index(AST):
 
 class ClassDefinition(ScopeAST):
 
+    type_import = 'type'
+    jsython_builtin_imports = (type_import,)
+
     def __init__(self, name, bases, body):
         super().__init__()
         self.name = name
         self.bases = bases
         self.body = body
 
+    @property
+    def type_symbol(self):
+        return self.convert_import_to_symbol(self.type_import)
+
     def transpile(self, info):
         yield self.name
-        yield ' = type(\''
+        yield ' = '
+        yield self.type_symbol
+        yield '(\''
         yield self.name
         yield '\', ['
         yield from yield_join(', ', self.bases, lambda node: node.transpile(info))
