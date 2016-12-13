@@ -682,9 +682,9 @@ class ClassDefinition(ScopeAST):
         yield self.name
         yield '\', ['
         yield from yield_join(', ', self.bases, lambda node: node.transpile(info))
-        yield '], function () '
+        yield '], (function () '
         yield from self.body.transpile(info)
-        yield ')'
+        yield ')())'
 
     def get_jsython_builtin_import_dict(self):
         imports_dict = super().get_jsython_builtin_import_dict()

@@ -77,8 +77,8 @@ def transform_call(node, info):
         argument_values=[transform(a, info) for a in node.args],
         argument_items=[(kw.arg, transform(kw.value, info))
                         for kw in node.keywords],
-        kw_argument_value=transform(node.kwargs, info),
-        var_argument_value=transform(node.starargs, info),
+        kw_argument_value=None,
+        var_argument_value=None,
     )
 
 
@@ -203,8 +203,8 @@ def transform_index(node, info):
 def transform_classdef(node, info):
     assert not node.decorator_list
     assert not node.keywords
-    assert node.starargs is None
-    assert node.kwargs is None
+    assert getattr(node, 'starargs', None) is None
+    assert getattr(node, 'kwargs', None) is None
 
     new_node = ClassDefinition(
         name=node.name,
