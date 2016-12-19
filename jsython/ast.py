@@ -32,6 +32,11 @@ class AST(object):
             )
         )
 
+    def transpile_assignment(self, value_transpiler, info):
+        yield from self.transpile(info)
+        yield ' = '
+        yield from value_transpiler
+
 
 class ScopeAST(AST):
     def __init__(self):
@@ -129,7 +134,7 @@ class Block(AST):
             stmt_str = ''.join(stmt.transpile(info))
             if not stmt_str:
                 continue
-            if isinstance(stmt, FunctionDefinition):
+            if isinstance(stmt, (FunctionDefinition, ClassDefinition)):
                 yield '\n'
             yield '\n'
             yield self.get_indent_str(info)
@@ -302,9 +307,9 @@ class Assign(AST):
         if len(self.targets) != 1:
             raise NotImplementedError(
                 'Multiple assignment targets not supported')
-        yield from self.targets[0].transpile(info)
-        yield ' = '
-        yield from self.value.transpile(info)
+        target = self.targets[0]
+        value_transpiler = self.value.transpile(info)
+        yield from target.transpile_assignment(value_transpiler, info)
 
     def get_jsython_builtin_import_dict(self):
         imports_dict = super().get_jsython_builtin_import_dict()
@@ -322,7 +327,8 @@ class AugAssign(AST):
         self.value = value
 
     def transpile(self, info):
-        yield from self.op.transpile_aug_assign(self.target, self.value, info)
+        value_transpiler = self.op.transpile_aug_assign(self.target, self.value, info)
+        yield from self.target.transpile_assignment(value_transpiler, info)
 
     def get_jsython_builtin_import_dict(self):
         imports_dict = super().get_jsython_builtin_import_dict()
@@ -577,6 +583,18 @@ class Attribute(AssignableAST):
         yield from self.attr
         yield '\'))'
 
+    def transpile_assignment(self, value_transpiler, info):
+        yield self.setattr_symbol
+        yield '('
+        yield from self.value.transpile(info)
+        yield ', '
+        yield self.str_cons_symbol
+        yield '(\''
+        yield from self.attr
+        yield '\'), '
+        yield from value_transpiler
+        yield')'
+
     def get_jsython_builtin_import_dict(self):
         imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.value.get_jsython_builtin_import_dict())
@@ -626,6 +644,10 @@ class Subscript(AssignableAST):
     def getitem_symbol(self):
         return self.convert_import_to_symbol(self.getitem_import)
 
+    @property
+    def setitem_symbol(self):
+        return self.convert_import_to_symbol(self.setitem_import)
+
     def __init__(self, value, key):
         self.value = value
         self.key = key
@@ -636,6 +658,16 @@ class Subscript(AssignableAST):
         yield from self.value.transpile(info)
         yield ', '
         yield from self.key.transpile(info)
+        yield ')'
+
+    def transpile_assignment(self, value_transpiler, info):
+        yield self.setitem_symbol
+        yield '('
+        yield from self.value.transpile(info)
+        yield ', '
+        yield from self.key.transpile(info)
+        yield ', '
+        yield from value_transpiler
         yield ')'
 
     def get_jsython_builtin_import_dict(self):
@@ -662,7 +694,9 @@ class Index(AST):
 class ClassDefinition(ScopeAST):
 
     type_import = 'type'
-    jsython_builtin_imports = (type_import,)
+    str_cons_import = 'str_cons'
+    list_cons_import = 'list_cons'
+    jsython_builtin_imports = (type_import, str_cons_import, list_cons_import)
 
     def __init__(self, name, bases, body):
         super().__init__()
@@ -674,15 +708,28 @@ class ClassDefinition(ScopeAST):
     def type_symbol(self):
         return self.convert_import_to_symbol(self.type_import)
 
+    @property
+    def str_cons_symbol(self):
+        return self.convert_import_to_symbol(self.str_cons_import)
+
+    @property
+    def list_cons_symbol(self):
+        return self.convert_import_to_symbol(self.list_cons_import)
+
     def transpile(self, info):
         yield self.name
         yield ' = '
         yield self.type_symbol
+        yield '('
+        yield self.str_cons_symbol
         yield '(\''
         yield self.name
-        yield '\', ['
-        yield from yield_join(', ', self.bases, lambda node: node.transpile(info))
-        yield '], (function () '
+        yield '\'), '
+        yield self.list_cons_symbol
+        yield '(['
+        yield from yield_join(', ', self.bases,
+                              lambda node: node.transpile(info))
+        yield ']), function () '
         yield from self.body.transpile(info)
         yield ')())'
 

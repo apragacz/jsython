@@ -65,8 +65,6 @@ class BinOp(AbstractBinOp):
         return {self.aug_assign_import: self.aug_assign_symbol}
 
     def transpile_aug_assign(self, target, value, info):
-        yield from target.transpile(info)
-        yield ' = '
         yield self.aug_assign_symbol
         yield '('
         yield from transpile_join(', ', [target, value], info)
