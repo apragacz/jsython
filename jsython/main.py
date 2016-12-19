@@ -1,8 +1,13 @@
+from __future__ import unicode_literals
 import os.path
+import sys
 from argparse import ArgumentParser
 
-from .parser import parse
-from .info import TranspileInfo
+if sys.version_info[0] < 3:
+    raise ImportError('Python 2 is not supported')
+
+from .parser import parse  # noqa
+from .info import TranspileInfo  # noqa
 
 
 def transpile(in_f, out_f):
@@ -31,3 +36,7 @@ def main(argv):
     for in_path, out_path in pairs:
         with open(in_path, 'rt') as in_f, open(out_path, 'wt') as out_f:
             transpile(in_f, out_f)
+
+
+def entry_point():
+    return main(sys.argv)
