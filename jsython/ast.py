@@ -736,4 +736,6 @@ class ClassDefinition(ScopeAST):
     def get_jsython_builtin_import_dict(self):
         imports_dict = super().get_jsython_builtin_import_dict()
         imports_dict.update(self.body.get_jsython_builtin_import_dict())
+        for base in self.bases:
+            imports_dict.update(base.get_jsython_builtin_import_dict())
         return imports_dict
